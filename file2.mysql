@@ -1,0 +1,202 @@
+use film_shop_name;
+--  (adding commission for staff)
+
+
+-- planning to give commission to staff (each year).But still 'NULL' until calculate (one year).
+ALTER table staff Add Comm int;
+
+--  (inserting new arrival film)
+
+insert into Film_det (Fi_name, director,actor , actress, cat_id,year,stock) values ('Film_name4','Director_name','Actor_name4','Actress_name4',2,2020,10);
+select*from Film_det;
+insert into Film_price(id,Year,price,Oscar) values (4,2020,10,0);
+-- checking the price table to know the data enter or not
+select*from Film_price;
+
+
+
+--  (rasing the price of Oscar Films of this year-2019)
+
+UPDATE Film_price set PRICE=12 where year=2019 and Oscar!=0;
+select * from Film_price where year=2019 and Oscar!=0;
+
+
+
+--  (to check the Oscar films details though actress name)
+
+DELIMITER //
+CREATE PROCEDURE actress_aca(
+IN actss varchar(25))
+BEGIN
+select * from Film_det where actress= actss and Fi_id in(select id from Film_price where Oscar!=0);
+End //
+DELIMITER ;
+call actress_aca('Actress_name3');
+
+
+--  (to check the Oscar films details though actor name)
+
+DELIMITER //
+CREATE PROCEDURE Actor_aca(
+IN actr varchar(25))
+BEGIN
+select * from Film_det where actor=actr and Fi_id in(select id from Film_price where Oscar!=0);
+End //
+DELIMITER ;
+call Actor_aca('Actor_name2');
+
+
+--  (to check the commission though staff name)
+
+-- calculating commission of staff though staff name (depending on the number of films they sold in bank)
+DELIMITER //
+CREATE procedure staffcomm(in scomm varchar(25),
+out ctext varchar(50))
+BEGIN
+    DECLARE idn INT;
+  select count(no)from bank_payment where staff_id=(select id from staff where name=scomm) into @idn;
+IF @idn<10 then
+Set ctext ='Sorry, you do not get commission.';
+ELSE
+Set ctext ='Congratulations,you will get commission.';
+END IF;
+END //
+DELIMITER ;
+
+--  call function and display
+call staffcomm('David',@ctext);
+-- display
+select @ctext;
+
+
+-- calculating commission of staff though staff name (depending on the number of films they sold in cash and bank)
+
+
+DELIMITER //
+CREATE procedure staffcomm1(in scomm varchar(25),
+out ctext varchar(50))
+BEGIN
+    DECLARE idn1 INT;
+    DECLARE idn2 INT;
+  select count(no)from bank_payment where staff_id=(select id from staff where name=scomm) into @idn1;
+  select count(no)from cash_payment where staff_id=(select id from staff where name=scomm) into @idn2;
+IF (@idn>=10 or @idn2>=10)then
+Set ctext ='Congratulations,you will get commission.';
+ELSE
+Set ctext ='Sorry, you do not get commission.';
+END IF;
+END //
+DELIMITER ;
+
+-- call function and display
+
+call staffcomm1('John',@ctext);
+
+
+-- display
+select @ctext;
+
+-- 11 (creating useful view tables of the details of selling film though cash and bank )
+
+Alter table customer rename column name to cname;
+
+Select customer.cname,film_det.Fi_name,staff.name,cash_payment.date from customer,Film_det,staff,cash_payment
+where customer.id=cash_payment.cus_id and Film_det.Fi_id=cash_payment.Fi_id
+and staff.id=cash_payment.staff_id;
+
+Select customer.cname,film_det.Fi_name,staff.name,bank_payment.date from customer,Film_det,staff,bank_payment
+where customer.id=bank_payment.cus_id and Film_det.Fi_id=bank_payment.Fi_id
+and staff.id=bank_payment.staff_id;
+
+Create View CSD As Select customer.cname,film_det.Fi_name,staff.name,cash_payment.date from customer,Film_det,staff,cash_payment
+where customer.id=cash_payment.cus_id and Film_det.Fi_id=cash_payment.Fi_id
+and staff.id=cash_payment.staff_id;
+
+Create View BSD as Select customer.cname,film_det.Fi_name,staff.name,bank_payment.date from customer,Film_det,staff,bank_payment
+where customer.id=bank_payment.cus_id and Film_det.Fi_id=bank_payment.Fi_id
+and staff.id=bank_payment.staff_id;
+
+Select * from CSD;
+Select * from BSD;
+
+
+
+-- 12 taking out film details from update to oldest
+
+Select * from Film_det  Order By year desc;
+Create View Year AS Select * from Film_det  Order By year desc;
+Select * from Year;
+
+
+-- 13 checking the (cash), total amounts (bank) and total amount (cash and bank)of a customer though customer id
+
+DELIMITER //
+CREATE PROCEDURE cus_total(out n varchar(20),
+IN idt int,inout cash int,inout bank int)
+BEGIN
+    Declare q int;
+select cname into n from customer where id=idt;
+select sum(amount) from cash_payment where no in (select no from cash_payment where cus_id=idt)into cash;
+select sum(amount) from bank_payment where no in (select no from bank_payment where cus_id=idt)into bank;
+set @q=cash+bank;
+End //
+DELIMITER ;
+
+call cus_total(@n,1,@cash,@bank);
+SELECT @n as customer_name,@cash as cash_amount,@bank as bank_amount,@q as total_amount;
+
+
+
+-- 14 giving 10% discount of old films (2015 and older than 2015) and creating view table to know the discount films
+
+select fp.id,fd.fi_name,fp.price*0.9 from Film_price fp,film_det fd where fp.id=fd.fi_id and fp.id in(select id from film_price where year<=2015);
+create view 10ppromotion as select fp.id,fd.fi_name,fp.price*0.9 from Film_price fp,film_det fd where fp.id=fd.fi_id and fp.id in(select id from film_price where year<=2015);
+select* from 10ppromotion;
+
+
+
+-- 15 checking stocks of films thougn film name for new order
+
+DELIMITER //
+Create function TotaStock(fname varchar(40))
+RETURNS int
+DETERMINISTIC
+BEGIN
+    declare stnum  int;
+    select stock into stnum from film_det where Fi_name=fname;
+    return stnum;
+end //
+DELIMITER ;
+Select TotaStock('Film_name1');
+
+
+-- 16 listing out hte name of our valuable customers
+
+DELIMITER //
+CREATE PROCEDURE custNameList (
+INOUT namelist varchar(4000))
+BEGIN
+DECLARE finished INTEGER DEFAULT 0;
+DECLARE customer_name varchar(100) DEFAULT "";
+
+DEClARE curName CURSOR FOR
+SELECT cname FROM customer;
+
+DECLARE CONTINUE HANDLER
+FOR NOT FOUND SET finished = 1;
+OPEN curName;
+getName: LOOP
+FETCH curName INTO customer_name;
+IF finished = 1 THEN
+LEAVE getName;
+END IF;
+SET nameList = CONCAT(namelist,customer_name,";");
+END LOOP getName;
+CLOSE curName;
+END //
+DELIMITER ;
+SET @nameList = "";
+-- call procedure
+CALL custNameList(@nameList);
+-- display
+SELECT @namelist as Our_Valuable_Customer_Names_are_as_below;
