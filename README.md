@@ -71,7 +71,7 @@
 **Install the mySQL Workbench**  or **DataGrip** or any other visual database design tools which can integrate SQL development, administration, database design, creation and maintenance into a single integrated development environment for the MySQL database system. 
 
 ## Running
-***Here is the link of MySQL Workbench*** `https://dev.mysql.com/downloads/workbench/` 
+***Here is the link of MySQL Workbench*** [https://dev.mysql.com/downloads/workbench/](https://dev.mysql.com/downloads/workbench/)
 ##
 - `run all file1.mysql on installed application to create tables and insert data`
 - `run the each and single one of query in file2.mysql step by step`
