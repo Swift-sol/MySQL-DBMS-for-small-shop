@@ -64,7 +64,7 @@
 
 ## Clone the project
 
-`git clone'[https://github.com/Swift-sol/MySQL-DBMS-for-small-shop.git](https://github.com/Swift-sol/MySQL-DBMS-for-small-shop.git)
+' git clone ' [https://github.com/Swift-sol/MySQL-DBMS-for-small-shop.git](https://github.com/Swift-sol/MySQL-DBMS-for-small-shop.git)
 
 ## Installation
 
