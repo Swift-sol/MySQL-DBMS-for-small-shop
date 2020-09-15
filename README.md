@@ -8,7 +8,12 @@
 <br/>
 
 <div align="center">
-	<sub>Built with ❤ 	
+<sub>Built with ❤ by  <a href="https://t.me/ThiriSan">Swift-sol</a> and
+<a href="https://github.com/Swift-sol/MySQL-DBMS-for-small-shop/graphs/contributors"> contributors
+</div>
+		
+		
+		
 </div>
 
 
